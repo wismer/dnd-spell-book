@@ -7,8 +7,7 @@
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 require 'json'
 
-spell_data = JSON.parse(File.read "spells.json")
-
+spell_data = JSON.parse(File.read "./db/spells.json")
 character_classes = spell_data["spells"].keys.map do |char_class|
   id = CharacterClass.create(name: char_class.capitalize)
   spells = spell_data["spells"][char_class]

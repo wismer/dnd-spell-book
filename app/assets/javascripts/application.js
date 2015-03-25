@@ -13,4 +13,7 @@
 //= require jquery
 //= require jquery_ujs
 //= require turbolinks
-//= require_tree .
+//= require JSXTransformer.js
+//= require react-with-addons.js
+//= require_tree ./react-components/components
+//= require ./react-components/main
