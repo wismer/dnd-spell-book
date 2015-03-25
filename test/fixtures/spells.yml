@@ -1,0 +1,23 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  level: 1
+  spell_type: MyString
+  cost: MyString
+  range: MyString
+  senses: MyString
+  duration: MyString
+  text: MyText
+  character_class_id: 
+
+two:
+  name: MyString
+  level: 1
+  spell_type: MyString
+  cost: MyString
+  range: MyString
+  senses: MyString
+  duration: MyString
+  text: MyText
+  character_class_id: 
