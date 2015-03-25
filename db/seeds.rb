@@ -5,3 +5,15 @@
 #
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
+require 'json'
+
+spell_data = JSON.parse(File.read "spells.json")
+
+character_classes = spell_data["spells"].keys.map do |char_class|
+  id = CharacterClass.create(name: char_class.capitalize)
+  spells = spell_data["spells"][char_class]
+  spells.each do |spell|
+    spell["character_class"] = id
+    Spell.create(spell)
+  end
+end
