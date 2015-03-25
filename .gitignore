@@ -18,3 +18,4 @@
 /db/*.json
 .DS_STORE
 /vendor/*
+/app/assets/javascripts/react-components/.module-cache

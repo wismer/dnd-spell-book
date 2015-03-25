@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   root 'home#spells'
+  get 'character-class/:character_class' => 'home#spell_list', as: :json
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
