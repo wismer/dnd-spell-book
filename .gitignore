@@ -16,3 +16,4 @@
 !/log/.keep
 /tmp
 /db/*.json
+/.DS_STORE
