@@ -10,4 +10,11 @@ class HomeController < ApplicationController
       format.json { render json: { spells: spells } }
     end
   end
+
+  def all_spells
+    results = Spell.all
+    respond_to do |format|
+      format.json { render json: { results: results } }
+    end
+  end
 end

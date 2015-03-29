@@ -1,17 +1,54 @@
-var Spell = React.createClass({
-  render: function() {
-    return (
-      <div>{this.props.active ? this.props.name : ""}</div>
-    )
-  }
-})
+var spellFilters = {
+  schools: {
+    Abjuration: { active: false },
+    Evocation: { active: false },
+    Enchantment: { active: false },
+    Conjuration: { active: false },
+    Transmutation: { active: false },
+    Illusion: { active: false },
+    Divination: { active: false },
+    Necromancy: { active: false }
+  },
+
+  // schools: [
+  //   { name: "Abjuration", active: false },
+  //   { name: "Evocation", active: false },
+  //   { name: "Enchantment", active: false },
+  //   { name: "Conjuration", active: false },
+  //   { name: "Transmutation", active: false },
+  //   { name: "Illusion", active: false },
+  //   { name: "Divination", active: false },
+  //   { name: "Necromancy", active: false }
+  // ],
+
+  spellLevels: [
+    { label: 0, active: false },
+    { label: 1, active: false },
+    { label: 2, active: false },
+    { label: 3, active: false },
+    { label: 4, active: false },
+    { label: 5, active: false },
+    { label: 6, active: false },
+    { label: 7, active: false },
+    { label: 8, active: false },
+    { label: 9, active: false },
+  ],
+
+  characterClasses: [
+    { name: "Fighter", active: false },
+    { name: "Bard", active: false },
+    { name: "Cleric", active: false },
+    { name: "Druid", active: false },
+    { name: "Paladin", active: false },
+    { name: "Ranger", active: false },
+    { name: "Sorceror", active: false },
+    { name: "Warlock", active: false },
+    { name: "Wizard", active: false }
+  ]
+}
 
 var CharacterClass = React.createClass({
   render: function() {
-    var spells = this.props.spells.map(function(spell){
-      return <Spell {...spell} />
-    })
-
     return (
       <div onClick={this.props.loadSpells}>
         {this.props.name}
@@ -21,39 +58,71 @@ var CharacterClass = React.createClass({
   }
 })
 
-var FilterPanel = React.createClass({
+var SpellSchools = React.createClass({
   render: function() {
-    var filterByLevel = this.props.filterByLevel;
-    var spellLevels = this.props.spellLevels.map(function(checked, index){
+    var applyFilter = this.props.schoolFilter;
+    var schools = this.props.schools;
+    var schoolFilterPanel = Object.keys(schools).map(function(schoolName){
+      var school = schools[schoolName];
+      var className = school.active ? "school-active" : "school";
+
       return (
-        <input
-          type='checkbox'
-          checked={checked}
-          onChange={filterByLevel.bind(null, index)}
-        >{index}</input>
+        <div key={schoolName}>
+          <a onClick={applyFilter.bind(null, "schools", schoolName, "spell_type")} className={className} href="#">{schoolName}</a>
+        </div>
       )
     })
 
     return (
-      <div>
-        <form>
-          <input type='text' />
-          {spellLevels}
-        </form>
+      <div id='school-list'>
+        {schoolFilterPanel}
       </div>
     )
   }
 })
 
-var ActiveSpellList = React.createClass({
+var SpellLevel = React.createClass({
   render: function() {
-    var spells = this.props.spells.map(function(spell, index){
-      return <Spell key={index} {...spell} />
-    })
+    return <div></div>
+  }
+})
 
+var ClassRestricted = React.createClass({
+  render: function() {
+    var classFilter = this.props.classFilter;
+    var charClasses = this.props.charClasses.map(function(charClass, i){
+      return (
+        <div>
+          <a
+            href="#"
+            onClick={classFilter.bind(null, "characterClasses", i, "character_class_id")}
+          >
+            {charClass.name}
+          </a>
+        </div>
+      )
+    })
+    return <div>{charClasses}</div>
+  }
+})
+
+var FilterPanel = React.createClass({
+  render: function() {
     return (
-      <div id='active-spells' style={{marginLeft: 150, width: 600}}>
+      <div>
         {this.props.children}
+      </div>
+    )
+  }
+})
+
+var QueryResults = React.createClass({
+  render: function() {
+    var spells = this.props.spells.map(function(spell){
+      return <div>{spell.name}</div>
+    })
+    return (
+      <div id='spell-list'>
         {spells}
       </div>
     )
@@ -62,94 +131,96 @@ var ActiveSpellList = React.createClass({
 
 var Menu = React.createClass({
   getInitialState: function() {
-    var charClasses = this.props.charClasses.map(function(klass){
-      return { name: klass, active: false, spells: [] }
-    })
-
-    return {
-      charClasses: charClasses,
-      activeSpellList: [],
-      filterControls: {
-        spellLevels: [true, true, true, true, true, true, true, true, true]
-      }
-    };
+    return { spellFilters: spellFilters, searchResults: [], spells: [] };
   },
 
-  filterSpells: function(e) {
-    var spellName = e.target.value;
-    var charClasses = this.state.charClasses;
-    charClasses.forEach(function(charClass){
-      charClass.spells.forEach(function(spell){
-        if (spell.name.match(spellName, "i")) {
+  componentWillMount: function() {
+    $.getJSON("/spells", function(data){
+      data.results.forEach(function(spell){
+        spell.active = false;
+      })
+
+      this.setState({ spells: data.results })
+    }.bind(this))
+  },
+
+  handleFilter: function(category, subcategory, spellKey, e) {
+    var spellFilters = this.state.spellFilters;
+    var filterCategory = spellFilters[category];
+    var spells = this.state.spells;
+    filterCategory[subcategory].active = !filterCategory[subcategory].active;
+
+    if (filterCategory[subcategory].active) {
+      for (var i = 0; i < spells.length; i++) {
+        var spell = spells[i];
+        if (spell[spellKey] === subcategory) {
           spell.active = true;
-        } else {
+        }
+      }
+    } else {
+      for (var i = 0; i < spells.length; i++) {
+        var spell = spells[i];
+        if (spell[spellKey] === subcategory) {
           spell.active = false;
         }
-      })
-    });
-
-    this.setState({ charClasses: charClasses })
-  },
-
-  levelFilter: function(level, e) {
-    var activeSpellList = this.state.activeSpellList;
-    var filterControls = this.state.filterControls;
-
-    filterControls.spellLevels[level] = e.target.checked;
-
-    for (var i = 0; i < activeSpellList.length; i++) {
-      var spell = activeSpellList[i];
-      spell.active = filterControls.spellLevels[spell.level];
+      }
     }
 
-    this.setState({ filterControls: filterControls, activeSpellList: activeSpellList })
+    this.setState({ spellFilters: spellFilters, spells: spells })
   },
 
-  loadSpells: function(klass, index, e) {
-    e.preventDefault();
-    var charClasses = this.state.charClasses;
-    var character = charClasses[index];
-    var activeSpellList = this.state.activeSpellList;
-    if (klass.spells.length === 0) {
-      $.getJSON("/character-class/" + character.name, function(data){
-        data.spells = data.spells.map(function(spell){
-          spell.active = true;
-          return spell;
-        })
-        this.setState({ activeSpellList: data.spells })
-      }.bind(this))
-    } else {
-      character.active = !character.active;
-      this.setState({ charClasses: charClasses })
+  removeSpells: function(subcategory, spellKey) {
+    var spells = this.state.spells;
+    var searchResults = this.state.searchResults;
+    var filteredResults = [];
+    for (var i = 0; i < searchResults.length; i++) {
+      var spell = searchResults[i];
+      if (spell[spellKey] !== subcategory) {
+        filteredResults.push(spell);
+      }
     }
+
+    this.setState({ spellFilters: this.state.spellFilters, searchResults: filteredResults })
+  },
+
+  addSpells: function(subcategory, spellKey) {
+    var spells = this.state.spells;
+    var filterResults = [];
+    for (var i = 0; i < spells.length; i++) {
+      var spell = spells[i];
+      if (spell[spellKey] === subcategory) {
+        filterResults.push(spell);
+      }
+    }
+
+    filterResults = this.state.searchResults.concat(filterResults);
+    this.setState({ spellFilters: this.state.spellFilters, searchResults: filterResults })
   },
 
   render: function() {
-    var self = this;
-    var charClasses = this.state.charClasses.map(function(klass, index){
-      return <CharacterClass loadSpells={self.loadSpells.bind(null, klass, index)} {...klass} />
+    var spellFilters = this.state.spellFilters;
+    var queryResults = this.state.spells.filter(function(spell){
+      return spell.active;
     })
-    var spellFilters = this.state.filterControls;
 
     return (
       <div id='master-spell-list'>
-        <div id='character-classes' style={{float: "left"}}>
-          {charClasses}
-        </div>
+        <FilterPanel>
+          <SpellSchools schoolFilter={this.handleFilter} schools={spellFilters.schools} />
+          <SpellLevel levels={spellFilters.spellLevels} />
+          <ClassRestricted charClasses={spellFilters.characterClasses} classFilter={this.handleFilter} />
+        </FilterPanel>
 
-        <ActiveSpellList spells={this.state.activeSpellList}>
-          <FilterPanel spellLevels={this.state.filterControls.spellLevels} filterByLevel={this.levelFilter} />
-        </ActiveSpellList>
+        <QueryResults spells={queryResults} />
       </div>
     )
   }
 })
 
 
-function crap(){
-  var characterClasses = ["Cleric", "Sorceror", "Warlock", "Fighter", "Paladin", "Wizard", "Bard", "Ranger", "Druid"]
+function crap() {
   React.render(
-    <Menu charClasses={characterClasses}  />,
+    <Menu spellFilters={spellFilters}  />,
     document.getElementById("spell-list")
   )
 }
