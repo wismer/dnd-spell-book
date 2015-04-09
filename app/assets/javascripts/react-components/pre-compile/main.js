@@ -1,116 +1,99 @@
 var spellFilters = {
   schools: {
-    Abjuration: { active: false },
-    Evocation: { active: false },
-    Enchantment: { active: false },
-    Conjuration: { active: false },
-    Transmutation: { active: false },
-    Illusion: { active: false },
-    Divination: { active: false },
-    Necromancy: { active: false }
+    isActive: false,
+    category: "schools",
+    items: [
+      { label: "Abjuration", active: false },
+      { label: "Evocation", active: false },
+      { label: "Enchantment", active: false },
+      { label: "Conjuration", active: false },
+      { label: "Transmutation", active: false },
+      { label: "Illusion", active: false },
+      { label: "Divination", active: false },
+      { label: "Necromancy", active: false }
+    ]
   },
 
-  // schools: [
-  //   { name: "Abjuration", active: false },
-  //   { name: "Evocation", active: false },
-  //   { name: "Enchantment", active: false },
-  //   { name: "Conjuration", active: false },
-  //   { name: "Transmutation", active: false },
-  //   { name: "Illusion", active: false },
-  //   { name: "Divination", active: false },
-  //   { name: "Necromancy", active: false }
-  // ],
+  spellLevels: {
+    isActive: false,
+    category: "spellLevels",
+    items: [
+      { label: 0, active: false },
+      { label: 1, active: false },
+      { label: 2, active: false },
+      { label: 3, active: false },
+      { label: 4, active: false },
+      { label: 5, active: false },
+      { label: 6, active: false },
+      { label: 7, active: false },
+      { label: 8, active: false },
+      { label: 9, active: false }
+    ]
+  },
 
-  spellLevels: [
-    { label: 0, active: false },
-    { label: 1, active: false },
-    { label: 2, active: false },
-    { label: 3, active: false },
-    { label: 4, active: false },
-    { label: 5, active: false },
-    { label: 6, active: false },
-    { label: 7, active: false },
-    { label: 8, active: false },
-    { label: 9, active: false },
-  ],
-
-  characterClasses: [
-    { name: "Bard", active: false, id: 1 },
-    { name: "Cleric", active: false, id: 2 },
-    { name: "Druid", active: false, id: 3 },
-    { name: "Paladin", active: false, id: 4 },
-    { name: "Ranger", active: false, id: 5 },
-    { name: "Sorceror", active: false, id: 6 },
-    { name: "Warlock", active: false, id: 7 },
-    { name: "Wizard", active: false, id: 8 }
-  ]
+  characterClasses: {
+    isActive: false,
+    category: "characterClasses",
+    items: [
+      { label: "Bard", active: false, id: 1 },
+      { label: "Cleric", active: false, id: 2 },
+      { label: "Druid", active: false, id: 3 },
+      { label: "Paladin", active: false, id: 4 },
+      { label: "Ranger", active: false, id: 5 },
+      { label: "Sorceror", active: false, id: 6 },
+      { label: "Warlock", active: false, id: 7 },
+      { label: "Wizard", active: false, id: 8 }
+    ]
+  }
 }
 
-var CharacterClass = React.createClass({
+var Filter = React.createClass({
   render: function() {
-    return (
-      <div onClick={this.props.loadSpells}>
-        {this.props.name}
-        {this.props.active ? spells : ""}
-      </div>
-    )
-  }
-})
+    var className = this.props.name;
+    var category = this.props.category;
+    var onFilterSelect = this.props.filterSelect;
+    var items = !this.props.isActive
+      ? className.toUpperCase()
+      : this.props.items.map(function(item, index){
+        return <li key={index}><a href="#">{item.label}</a></li>
+      })
 
-var SpellSchools = React.createClass({
-  render: function() {
-    var applyFilter = this.props.schoolFilter;
-    var schools = this.props.schools;
-    var schoolFilterPanel = Object.keys(schools).map(function(schoolName){
-      var school = schools[schoolName];
-      var className = school.active ? "school-active" : "school";
+    var dropDown = <a href="#"
+      onClick={onFilterSelect.bind(null, category)}
+      className="dropdown-toggle" aria-expanded="false">
+      {className.toUpperCase()} <span className="caret"></span>
+    </a>
 
-      return (
-        <div key={schoolName}>
-          <a onClick={applyFilter.bind(null, "schools", schoolName, "spell_type")} className={className} href="#">{schoolName}</a>
-        </div>
-      )
-    })
+    var style = { display: this.props.isActive ? "block" : "none" };
 
     return (
-      <div id='school-list'>
-        {schoolFilterPanel}
-      </div>
+      <li className='dropdown'>
+        {dropDown}
+        <ul className='dropdown-menu' style={style}>{items}</ul>
+      </li>
     )
-  }
-})
-
-var SpellLevel = React.createClass({
-  render: function() {
-    return <div></div>
-  }
-})
-
-var ClassRestricted = React.createClass({
-  render: function() {
-    var classFilter = this.props.classFilter;
-    var charClasses = this.props.charClasses.map(function(charClass, i){
-      return (
-        <div>
-          <a
-            href="#"
-            onClick={classFilter.bind(null, "characterClasses", i, "character_class_id")}
-          >
-            {charClass.name}
-          </a>
-        </div>
-      )
-    })
-    return <div>{charClasses}</div>
   }
 })
 
 var FilterPanel = React.createClass({
   render: function() {
+    var schools = this.props.schools;
+    var levels = this.props.spellLevels;
+    var charClasses = this.props.characterClasses;
+    var onFilterSelect = this.props.onFilterSelect;
+
     return (
-      <div>
-        {this.props.children}
-      </div>
+      <nav className='navbar navbar-default'>
+        <div className='container-fluid'>
+          <div className="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul className='nav navbar-nav'>
+              <li className='dropdown'><Filter filterSelect={onFilterSelect} name='schools' {...schools} /></li>
+              <li className='dropdown'><Filter filterSelect={onFilterSelect} name='levels' {...levels} /></li>
+              <li className='dropdown'><Filter filterSelect={onFilterSelect} name='Character Classes' {...charClasses} /></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
     )
   }
 })
@@ -120,9 +103,12 @@ var QueryResults = React.createClass({
     var spells = this.props.spells.map(function(spell){
       return <div>{spell.name}</div>
     })
+
     return (
       <div id='spell-list'>
-        {spells}
+        <ul className='navbar nav'>
+          {spells}
+        </ul>
       </div>
     )
   }
@@ -130,26 +116,18 @@ var QueryResults = React.createClass({
 
 var Menu = React.createClass({
   getInitialState: function() {
-    return { spellFilters: spellFilters, searchResults: [], spells: [] };
+    return {
+      spellFilters: spellFilters,
+      searchResults: [],
+      spells: []
+    };
   },
 
-  handleFilter: function(category, subcategory, spellKey, e) {
+  handleFilter: function(category, e) {
     var spellFilters = this.state.spellFilters;
-    var filterCategory = spellFilters[category];
-    var spells = this.state.spells;
-    filterCategory[subcategory].active = !filterCategory[subcategory].active;
-    if (subcategory === "characterClasses") {
-      searchParams[spellKey] = filterCategory
-    }
-    var searchParams = {};
-    searchParams[spellKey] = subcategory;
-    if (filterCategory[subcategory].active) {
-      $.getJSON("/query", { spells: searchParams }, function(data){
-        debugger
-      })
-    }
-
-    this.setState({ spellFilters: spellFilters, spells: spells })
+    var filter = spellFilters[category];
+    filter.isActive = !filter.isActive;
+    this.setState({ spellFilters: spellFilters })
   },
 
   render: function() {
@@ -157,15 +135,11 @@ var Menu = React.createClass({
     var queryResults = this.state.spells.filter(function(spell){
       return spell.active;
     })
+    var activeFilter = spellFilters.activeFilter;
 
     return (
       <div id='master-spell-list'>
-        <FilterPanel>
-          <SpellSchools schoolFilter={this.handleFilter} schools={spellFilters.schools} />
-          <SpellLevel levels={spellFilters.spellLevels} />
-          <ClassRestricted charClasses={spellFilters.characterClasses} classFilter={this.handleFilter} />
-        </FilterPanel>
-
+        <FilterPanel onFilterSelect={this.handleFilter} {...spellFilters} />
         <QueryResults spells={queryResults} />
       </div>
     )

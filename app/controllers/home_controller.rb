@@ -22,6 +22,10 @@ class HomeController < ApplicationController
     end
   end
 
+  def query_targets
+    
+  end
+
   private
 
   def query_params
