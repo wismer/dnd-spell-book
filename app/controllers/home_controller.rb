@@ -1,8 +1,4 @@
 class HomeController < ApplicationController
-  def spells
-
-  end
-
   def spell_list
     spells = CharacterClass.find_by(name: params[:character_class].capitalize).spells
 
@@ -16,5 +12,19 @@ class HomeController < ApplicationController
     respond_to do |format|
       format.json { render json: { results: results } }
     end
+  end
+
+  def spell_query
+    results = Spell.where(query_params)
+
+    respond_to do |format|
+      format.json { render json: { results: results } }
+    end
+  end
+
+  private
+
+  def query_params
+    params.require(:spells).permit(:spell_type, :character_class, :level)
   end
 end

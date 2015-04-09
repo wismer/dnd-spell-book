@@ -35,15 +35,14 @@ var spellFilters = {
   ],
 
   characterClasses: [
-    { name: "Fighter", active: false },
-    { name: "Bard", active: false },
-    { name: "Cleric", active: false },
-    { name: "Druid", active: false },
-    { name: "Paladin", active: false },
-    { name: "Ranger", active: false },
-    { name: "Sorceror", active: false },
-    { name: "Warlock", active: false },
-    { name: "Wizard", active: false }
+    { name: "Bard", active: false, id: 1 },
+    { name: "Cleric", active: false, id: 2 },
+    { name: "Druid", active: false, id: 3 },
+    { name: "Paladin", active: false, id: 4 },
+    { name: "Ranger", active: false, id: 5 },
+    { name: "Sorceror", active: false, id: 6 },
+    { name: "Warlock", active: false, id: 7 },
+    { name: "Wizard", active: false, id: 8 }
   ]
 }
 
@@ -134,67 +133,23 @@ var Menu = React.createClass({displayName: 'Menu',
     return { spellFilters: spellFilters, searchResults: [], spells: [] };
   },
 
-  componentWillMount: function() {
-    $.getJSON("/spells", function(data){
-      data.results.forEach(function(spell){
-        spell.active = false;
-      })
-
-      this.setState({ spells: data.results })
-    }.bind(this))
-  },
-
   handleFilter: function(category, subcategory, spellKey, e) {
     var spellFilters = this.state.spellFilters;
     var filterCategory = spellFilters[category];
     var spells = this.state.spells;
     filterCategory[subcategory].active = !filterCategory[subcategory].active;
-
+    if (subcategory === "characterClasses") {
+      searchParams[spellKey] = filterCategory
+    }
+    var searchParams = {};
+    searchParams[spellKey] = subcategory;
     if (filterCategory[subcategory].active) {
-      for (var i = 0; i < spells.length; i++) {
-        var spell = spells[i];
-        if (spell[spellKey] === subcategory) {
-          spell.active = true;
-        }
-      }
-    } else {
-      for (var i = 0; i < spells.length; i++) {
-        var spell = spells[i];
-        if (spell[spellKey] === subcategory) {
-          spell.active = false;
-        }
-      }
+      $.getJSON("/query", { spells: searchParams }, function(data){
+        debugger
+      })
     }
 
     this.setState({ spellFilters: spellFilters, spells: spells })
-  },
-
-  removeSpells: function(subcategory, spellKey) {
-    var spells = this.state.spells;
-    var searchResults = this.state.searchResults;
-    var filteredResults = [];
-    for (var i = 0; i < searchResults.length; i++) {
-      var spell = searchResults[i];
-      if (spell[spellKey] !== subcategory) {
-        filteredResults.push(spell);
-      }
-    }
-
-    this.setState({ spellFilters: this.state.spellFilters, searchResults: filteredResults })
-  },
-
-  addSpells: function(subcategory, spellKey) {
-    var spells = this.state.spells;
-    var filterResults = [];
-    for (var i = 0; i < spells.length; i++) {
-      var spell = spells[i];
-      if (spell[spellKey] === subcategory) {
-        filterResults.push(spell);
-      }
-    }
-
-    filterResults = this.state.searchResults.concat(filterResults);
-    this.setState({ spellFilters: this.state.spellFilters, searchResults: filterResults })
   },
 
   render: function() {

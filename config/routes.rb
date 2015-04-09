@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
   root 'home#spells'
-  get 'character-class/:character_class' => 'home#spell_list', as: :json
+  get 'character-class/:character_class' => 'home#spell_list'
   get 'spells' => 'home#all_spells'
+  get 'query' => 'home#spell_query', as: :json
+
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
