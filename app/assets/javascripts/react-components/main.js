@@ -18,16 +18,16 @@ var spellFilters = {
     isActive: false,
     category: "spellLevels",
     items: [
-      { label: 0, active: false },
-      { label: 1, active: false },
-      { label: 2, active: false },
-      { label: 3, active: false },
-      { label: 4, active: false },
-      { label: 5, active: false },
-      { label: 6, active: false },
-      { label: 7, active: false },
-      { label: 8, active: false },
-      { label: 9, active: false }
+      { label: "Level 0 (cantrip)", active: false },
+      { label: "Level 1", active: false },
+      { label: "Level 2", active: false },
+      { label: "Level 3", active: false },
+      { label: "Level 4", active: false },
+      { label: "Level 5", active: false },
+      { label: "Level 6", active: false },
+      { label: "Level 7", active: false },
+      { label: "Level 8", active: false },
+      { label: "Level 9", active: false }
     ]
   },
 
@@ -52,14 +52,15 @@ var Filter = React.createClass({displayName: 'Filter',
     var className = this.props.name;
     var category = this.props.category;
     var onFilterSelect = this.props.filterSelect;
+    var handleSelect = this.props.handleSelect;
     var items = !this.props.isActive
       ? className.toUpperCase()
       : this.props.items.map(function(item, index){
-        return React.createElement("li", {key: index}, React.createElement("a", {href: "#"}, item.label))
+        return React.createElement("li", {key: index, onClick: handleSelect}, React.createElement("a", {href: "#"}, item.label))
       })
 
     var dropDown = React.createElement("a", {href: "#", 
-      onClick: onFilterSelect.bind(null, category), 
+      onMouseOver: onFilterSelect.bind(null, category), 
       className: "dropdown-toggle", 'aria-expanded': "false"}, 
       className.toUpperCase(), " ", React.createElement("span", {className: "caret"})
     )
@@ -69,7 +70,9 @@ var Filter = React.createClass({displayName: 'Filter',
     return (
       React.createElement("li", {className: "dropdown"}, 
         dropDown, 
-        React.createElement("ul", {className: "dropdown-menu", style: style}, items)
+        React.createElement("ul", {
+          onMouseLeave: onFilterSelect, 
+          className: "dropdown-menu", style: style}, items)
       )
     )
   }
@@ -87,9 +90,15 @@ var FilterPanel = React.createClass({displayName: 'FilterPanel',
         React.createElement("div", {className: "container-fluid"}, 
           React.createElement("div", {className: "collapse navbar-collapse", id: "bs-example-navbar-collapse-1"}, 
             React.createElement("ul", {className: "nav navbar-nav"}, 
-              React.createElement("li", {className: "dropdown"}, React.createElement(Filter, React.__spread({filterSelect: onFilterSelect, name: "schools"},  schools))), 
-              React.createElement("li", {className: "dropdown"}, React.createElement(Filter, React.__spread({filterSelect: onFilterSelect, name: "levels"},  levels))), 
-              React.createElement("li", {className: "dropdown"}, React.createElement(Filter, React.__spread({filterSelect: onFilterSelect, name: "Character Classes"},  charClasses)))
+              React.createElement("li", {className: "dropdown"}, 
+                React.createElement(Filter, React.__spread({filterSelect: onFilterSelect, name: "schools"},  schools))
+              ), 
+              React.createElement("li", {className: "dropdown"}, 
+                React.createElement(Filter, React.__spread({filterSelect: onFilterSelect, name: "levels"},  levels))
+              ), 
+              React.createElement("li", {className: "dropdown"}, 
+                React.createElement(Filter, React.__spread({filterSelect: onFilterSelect, name: "Character Classes"},  charClasses))
+              )
             )
           )
         )
@@ -105,7 +114,7 @@ var QueryResults = React.createClass({displayName: 'QueryResults',
     })
 
     return (
-      React.createElement("div", {id: "spell-list"}, 
+      React.createElement("div", {id: "spell-list", className: "container"}, 
         React.createElement("ul", {className: "navbar nav"}, 
           spells
         )
@@ -119,14 +128,28 @@ var Menu = React.createClass({displayName: 'Menu',
     return {
       spellFilters: spellFilters,
       searchResults: [],
-      spells: []
+      spells: [],
+      activeQuery: {}
     };
   },
 
   handleFilter: function(category, e) {
     var spellFilters = this.state.spellFilters;
-    var filter = spellFilters[category];
-    filter.isActive = !filter.isActive;
+    for (var filter in spellFilters) {
+      var spellFilter = spellFilters[filter];
+      if (category) {
+        if (spellFilter.isActive) {
+          spellFilter.isActive = false;
+        }
+
+        if (category === filter) {
+          spellFilter.isActive = true;
+        }
+      } else {
+        spellFilter.isActive = false;
+      }
+    }
+
     this.setState({ spellFilters: spellFilters })
   },
 
@@ -135,10 +158,9 @@ var Menu = React.createClass({displayName: 'Menu',
     var queryResults = this.state.spells.filter(function(spell){
       return spell.active;
     })
-    var activeFilter = spellFilters.activeFilter;
 
     return (
-      React.createElement("div", {id: "master-spell-list"}, 
+      React.createElement("div", {id: "master-spell-list", className: "container"}, 
         React.createElement(FilterPanel, React.__spread({onFilterSelect: this.handleFilter},  spellFilters)), 
         React.createElement(QueryResults, {spells: queryResults})
       )

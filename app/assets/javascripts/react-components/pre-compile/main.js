@@ -18,16 +18,16 @@ var spellFilters = {
     isActive: false,
     category: "spellLevels",
     items: [
-      { label: 0, active: false },
-      { label: 1, active: false },
-      { label: 2, active: false },
-      { label: 3, active: false },
-      { label: 4, active: false },
-      { label: 5, active: false },
-      { label: 6, active: false },
-      { label: 7, active: false },
-      { label: 8, active: false },
-      { label: 9, active: false }
+      { label: "Level 0 (cantrip)", active: false },
+      { label: "Level 1", active: false },
+      { label: "Level 2", active: false },
+      { label: "Level 3", active: false },
+      { label: "Level 4", active: false },
+      { label: "Level 5", active: false },
+      { label: "Level 6", active: false },
+      { label: "Level 7", active: false },
+      { label: "Level 8", active: false },
+      { label: "Level 9", active: false }
     ]
   },
 
@@ -52,14 +52,15 @@ var Filter = React.createClass({
     var className = this.props.name;
     var category = this.props.category;
     var onFilterSelect = this.props.filterSelect;
+    var handleSelect = this.props.handleSelect;
     var items = !this.props.isActive
       ? className.toUpperCase()
       : this.props.items.map(function(item, index){
-        return <li key={index}><a href="#">{item.label}</a></li>
+        return <li key={index} onClick={handleSelect}><a href="#">{item.label}</a></li>
       })
 
     var dropDown = <a href="#"
-      onClick={onFilterSelect.bind(null, category)}
+      onMouseOver={onFilterSelect.bind(null, category)}
       className="dropdown-toggle" aria-expanded="false">
       {className.toUpperCase()} <span className="caret"></span>
     </a>
@@ -69,7 +70,9 @@ var Filter = React.createClass({
     return (
       <li className='dropdown'>
         {dropDown}
-        <ul className='dropdown-menu' style={style}>{items}</ul>
+        <ul
+          onMouseLeave={onFilterSelect}
+          className='dropdown-menu' style={style}>{items}</ul>
       </li>
     )
   }
@@ -87,9 +90,15 @@ var FilterPanel = React.createClass({
         <div className='container-fluid'>
           <div className="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul className='nav navbar-nav'>
-              <li className='dropdown'><Filter filterSelect={onFilterSelect} name='schools' {...schools} /></li>
-              <li className='dropdown'><Filter filterSelect={onFilterSelect} name='levels' {...levels} /></li>
-              <li className='dropdown'><Filter filterSelect={onFilterSelect} name='Character Classes' {...charClasses} /></li>
+              <li className='dropdown'>
+                <Filter filterSelect={onFilterSelect} name='schools' {...schools} />
+              </li>
+              <li className='dropdown'>
+                <Filter filterSelect={onFilterSelect} name='levels' {...levels} />
+              </li>
+              <li className='dropdown'>
+                <Filter filterSelect={onFilterSelect} name='Character Classes' {...charClasses} />
+              </li>
             </ul>
           </div>
         </div>
@@ -105,7 +114,7 @@ var QueryResults = React.createClass({
     })
 
     return (
-      <div id='spell-list'>
+      <div id='spell-list' className='container'>
         <ul className='navbar nav'>
           {spells}
         </ul>
@@ -119,14 +128,28 @@ var Menu = React.createClass({
     return {
       spellFilters: spellFilters,
       searchResults: [],
-      spells: []
+      spells: [],
+      activeQuery: {}
     };
   },
 
   handleFilter: function(category, e) {
     var spellFilters = this.state.spellFilters;
-    var filter = spellFilters[category];
-    filter.isActive = !filter.isActive;
+    for (var filter in spellFilters) {
+      var spellFilter = spellFilters[filter];
+      if (category) {
+        if (spellFilter.isActive) {
+          spellFilter.isActive = false;
+        }
+
+        if (category === filter) {
+          spellFilter.isActive = true;
+        }
+      } else {
+        spellFilter.isActive = false;
+      }
+    }
+
     this.setState({ spellFilters: spellFilters })
   },
 
@@ -135,10 +158,9 @@ var Menu = React.createClass({
     var queryResults = this.state.spells.filter(function(spell){
       return spell.active;
     })
-    var activeFilter = spellFilters.activeFilter;
 
     return (
-      <div id='master-spell-list'>
+      <div id='master-spell-list' className='container'>
         <FilterPanel onFilterSelect={this.handleFilter} {...spellFilters} />
         <QueryResults spells={queryResults} />
       </div>
