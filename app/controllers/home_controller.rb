@@ -23,12 +23,12 @@ class HomeController < ApplicationController
   end
 
   def query_targets
-    
+
   end
 
   private
 
   def query_params
-    params.require(:spells).permit(:spell_type, :character_class, :level)
+    params.require(:spells).permit(:spell_type, :level, { :character_class => [] })
   end
 end

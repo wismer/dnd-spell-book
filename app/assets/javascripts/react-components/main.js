@@ -2,6 +2,7 @@ var spellFilters = {
   schools: {
     isActive: false,
     category: "schools",
+    param: "spell_type",
     items: [
       { label: "Abjuration", active: false },
       { label: "Evocation", active: false },
@@ -17,6 +18,7 @@ var spellFilters = {
   spellLevels: {
     isActive: false,
     category: "spellLevels",
+    param: "level",
     items: [
       { label: "Level 0 (cantrip)", active: false },
       { label: "Level 1", active: false },
@@ -34,6 +36,7 @@ var spellFilters = {
   characterClasses: {
     isActive: false,
     category: "characterClasses",
+    param: "character_class",
     items: [
       { label: "Bard", active: false, id: 1 },
       { label: "Cleric", active: false, id: 2 },
@@ -50,28 +53,37 @@ var spellFilters = {
 var Filter = React.createClass({displayName: 'Filter',
   render: function() {
     var className = this.props.name;
-    var category = this.props.category;
-    var onFilterSelect = this.props.filterSelect;
+    var cat = this.props.category;
     var handleSelect = this.props.handleSelect;
+    var filterSelect = this.props.filterSelect;
+    var dropDownFilter = { category: cat, action: 'dropdown' };
+
     var items = !this.props.isActive
       ? className.toUpperCase()
       : this.props.items.map(function(item, index){
-        return React.createElement("li", {key: index, onClick: handleSelect}, React.createElement("a", {href: "#"}, item.label))
+        var itemFilter = { category: cat, item: item, action: 'select', index: index };
+        return (
+          React.createElement("li", {key: index, onClick: filterSelect.bind(null, itemFilter)}, 
+            React.createElement("a", {href: "#"}, item.label)
+          )
+        )
       })
 
     var dropDown = React.createElement("a", {href: "#", 
-      onMouseOver: onFilterSelect.bind(null, category), 
+      onMouseOver: filterSelect.bind(null, dropDownFilter), 
       className: "dropdown-toggle", 'aria-expanded': "false"}, 
       className.toUpperCase(), " ", React.createElement("span", {className: "caret"})
     )
 
-    var style = { display: this.props.isActive ? "block" : "none" };
+    var mouseLeave = { category: cat, action: 'mouseleave' };
 
+    var style = { display: this.props.isActive ? "block" : "none" };
     return (
-      React.createElement("li", {className: "dropdown"}, 
+      React.createElement("li", {
+        onMouseLeave: filterSelect.bind(null, mouseLeave), 
+        className: "dropdown"}, 
         dropDown, 
         React.createElement("ul", {
-          onMouseLeave: onFilterSelect, 
           className: "dropdown-menu", style: style}, items)
       )
     )
@@ -99,6 +111,14 @@ var FilterPanel = React.createClass({displayName: 'FilterPanel',
               React.createElement("li", {className: "dropdown"}, 
                 React.createElement(Filter, React.__spread({filterSelect: onFilterSelect, name: "Character Classes"},  charClasses))
               )
+            ), 
+
+            React.createElement("form", {className: "navbar-form navbar-left"}, 
+              React.createElement("div", {className: "form-group"}, 
+                React.createElement("div", {className: "checkbox"}, 
+                  React.createElement("label", null, React.createElement("input", {type: "checkbox"}), " Spell School")
+                )
+              )
             )
           )
         )
@@ -109,15 +129,13 @@ var FilterPanel = React.createClass({displayName: 'FilterPanel',
 
 var QueryResults = React.createClass({displayName: 'QueryResults',
   render: function() {
-    var spells = this.props.spells.map(function(spell){
-      return React.createElement("div", null, spell.name)
+    var spells = this.props.spells.map(function(spell, index){
+      return React.createElement("div", {key: index}, spell.name)
     })
 
     return (
       React.createElement("div", {id: "spell-list", className: "container"}, 
-        React.createElement("ul", {className: "navbar nav"}, 
-          spells
-        )
+        spells
       )
     )
   }
@@ -133,31 +151,62 @@ var Menu = React.createClass({displayName: 'Menu',
     };
   },
 
-  handleFilter: function(category, e) {
-    var spellFilters = this.state.spellFilters;
+  handleDropDown: function(filter, spellFilters) {
+    var spellFilter = spellFilters[filter.category];
+    spellFilter.isActive = true;
+    return spellFilters;
+  },
+
+  handleLeaveFilter: function(spellFilters) {
+    for (filter in spellFilters) {
+      spellFilters[filter].isActive = false;
+    }
+    return spellFilters;
+  },
+
+  handleOptionSelect: function(filter, spellFilters) {
+    var spellFilter = spellFilters[filter.category];
+    var spells = {};
+    spellFilter.items.forEach(function(item){
+      if (filter.item === item) {
+        item.isActive = true;
+      } else {
+        item.isActive = false;
+      }
+    })
+
     for (var filter in spellFilters) {
       var spellFilter = spellFilters[filter];
-      if (category) {
-        if (spellFilter.isActive) {
-          spellFilter.isActive = false;
-        }
+      spells[spellFilter.param] = spellFilter.items.filter(function(item){
+        return item.isActive;
+      }).map(function(item){
+        return item.id;
+      })
 
-        if (category === filter) {
-          spellFilter.isActive = true;
-        }
-      } else {
-        spellFilter.isActive = false;
-      }
+      if (spells[spellFilter.param].length === 0) delete spells[spellFilter.param];
     }
 
-    this.setState({ spellFilters: spellFilters })
+    $.getJSON("/query-spells", {spells: spells}, function(res){
+      this.setState({ spellFilters: spellFilters, searchResults: res.results })
+    }.bind(this))
+  },
+
+  handleFilter: function(filter, e) {
+    var spellFilters = this.props.spellFilters;
+    if (filter.action === "dropdown") {
+      spellFilters = this.handleDropDown(filter, spellFilters);
+    } else if (filter.action === "mouseleave") {
+      spellFilters = this.handleLeaveFilter(spellFilters);
+    } else {
+      this.handleOptionSelect(filter, spellFilters);
+    }
+
+    this.setState({ spellFilters: spellFilters });
   },
 
   render: function() {
     var spellFilters = this.state.spellFilters;
-    var queryResults = this.state.spells.filter(function(spell){
-      return spell.active;
-    })
+    var queryResults = this.state.searchResults;
 
     return (
       React.createElement("div", {id: "master-spell-list", className: "container"}, 
